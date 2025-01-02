@@ -51,10 +51,10 @@ function love.draw()
     ---@param b love.Body
     function(a, b)
         local ay, by = a:getY(), b:getY()
-        if ay < by then return true end
+        if ay ~= by then return ay < by end
 
         local az, bz = a:getUserData().z, b:getUserData().z
-        if az < bz then return true end
+        if az ~= bz then return az < bz end
 
         local ax, bx = a:getX(), b:getX()
         return ax < bx
