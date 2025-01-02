@@ -112,13 +112,13 @@ function love.draw()
                 love.graphics.setColor(ud.red, ud.green, ud.blue)
                 love.graphics.polygon("line", points)
 
-                -- love.graphics.setColor(ud.red, ud.green, ud.blue, .5)
-                -- local px1, py1 = points[#points-1], points[#points]
-                -- for i = 2, #points, 2 do
-                --     local px, py = points[i-1], points[i]
-                --     love.graphics.polygon("fill", px1, py1, px, py, px - height, py - height, px1 - height, py1 - height)
-                --     px1, py1 = px, py
-                -- end
+                love.graphics.setColor(ud.red, ud.green, ud.blue, .5)
+                local px1, py1 = points[#points-1], points[#points]
+                for i = 2, #points, 2 do
+                    local px, py = points[i-1], points[i]
+                    love.graphics.polygon("fill", px1, py1 - height, px, py - height, px, py, px1, py1)
+                    px1, py1 = px, py
+                end
                 love.graphics.setColor(ud.red, ud.green, ud.blue)
                 for i = 2, #points, 2 do
                     local px, py = points[i-1], points[i]
