@@ -1,6 +1,5 @@
 local world ---@type love.World
 local player ---@type love.Body
-local cube ---@type love.Body
 
 function love.load()
     world = love.physics.newWorld(0, 0, false)
@@ -12,7 +11,7 @@ function love.load()
         red = 1, green = .5, blue = .5
     })
 
-    cube = love.physics.newBody(world, 600, 300, "static")
+    local playerX, playerY = player:getPosition()
     local triangles = love.math.triangulate(
         32 * math.cos(math.pi*0/3), 32 * math.sin(math.pi*0/3),
         32 * math.cos(math.pi*1/3), 32 * math.sin(math.pi*1/3),
@@ -21,14 +20,18 @@ function love.load()
         32 * math.cos(math.pi*4/3), 32 * math.sin(math.pi*4/3),
         32 * math.cos(math.pi*5/3), 32 * math.sin(math.pi*5/3)
     )
-    for _, triangle in ipairs(triangles) do
-        love.physics.newFixture(cube, love.physics.newPolygonShape(triangle))
+    for i = 1, 6 do
+        local hexX, hexY = playerX + 100*math.cos(math.pi*i/3), playerY + 100*math.sin(math.pi*i/3)
+        local hex = love.physics.newBody(world, hexX, hexY, "static")
+        for _, triangle in ipairs(triangles) do
+            love.physics.newFixture(hex, love.physics.newPolygonShape(triangle))
+        end
+        hex:setUserData({
+            z = 16*i,
+            height = 32,
+            red = .5, green = .5, blue = 1
+        })
     end
-    cube:setUserData({
-        z = 32,
-        height = 32,
-        red = .5, green = .5, blue = 1
-    })
     love.graphics.setBackgroundColor(0, .5, 0)
 end
 
