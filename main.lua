@@ -3,6 +3,20 @@ local player ---@type love.Body
 
 function love.load()
     world = love.physics.newWorld(0, 0, false)
+    world:setContactFilter(
+    ---@param a love.Fixture
+    ---@param b love.Fixture
+    function(a, b)
+        local aud, bud = a:getBody():getUserData(), b:getBody():getUserData()
+        if not aud or not bud then return true end
+
+        local az, bz = aud.z, bud.z
+        local ah, bh = aud.height, bud.height
+        if not az or not bz or not ah or not bh then return true end
+
+        return az < bz + bh and bz < az + ah
+    end)
+
     player = love.physics.newBody(world, 400, 300, "dynamic")
     love.physics.newFixture(player, love.physics.newCircleShape(16))
     player:setUserData({
