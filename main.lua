@@ -22,6 +22,8 @@ function love.load()
     player:setUserData({
         z = 0,
         height = 64,
+        velZ = 0,
+        gravity = -180,
         red = 1, green = .5, blue = .5
     })
 
@@ -50,14 +52,31 @@ function love.load()
 end
 
 function love.update(dt)
+    world:update(dt)
+
     local ix, iy = 0, 0
     ix = ix + (love.keyboard.isDown("a") and -1 or 0)
     ix = ix + (love.keyboard.isDown("d") and 1 or 0)
     iy = iy + (love.keyboard.isDown("w") and -1 or 0)
     iy = iy + (love.keyboard.isDown("s") and 1 or 0)
-
     player:setLinearVelocity(180*ix, 180*iy)
-    world:update(dt)
+
+    local floorZ = 0
+
+    local pud = player:getUserData()
+    if pud.z > floorZ then
+        pud.velZ = pud.velZ + pud.gravity*dt
+        pud.z = pud.z + pud.velZ*dt
+        if pud.z <= floorZ then
+            pud.velZ = 0
+            pud.z = floorZ
+        end
+    else
+        if love.keyboard.isDown("space") then
+            pud.velZ = -pud.gravity
+            pud.z = pud.z + pud.velZ*dt
+        end
+    end
 end
 
 function love.draw()
