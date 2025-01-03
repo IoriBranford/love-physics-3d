@@ -40,6 +40,52 @@ local function preSolve3D(a, b, c)
     c:setEnabled(testCollisionZ(a, b))
 end
 
+---@param body1 love.Body
+local function updateBodyFloorAndCeiling(body1)
+    local ud1 = body1:getUserData() ---@type BodyUserData
+    local bottom1 = ud1.z
+    local top1 = bottom1 + ud1.height
+    local floorZ = WorldBottom
+    local ceilingZ = WorldTop
+    for _, contact in pairs(body1:getContacts()) do
+        ---@cast contact love.Contact
+        if contact:isTouching() then
+            local f1, f2 = contact:getFixtures()
+            local body2 = f2:getBody() == body1 and f1:getBody() or f2:getBody()
+            local ud2 = body2:getUserData() ---@type BodyUserData
+            local bottom2 = ud2.z
+            local top2 = bottom2 + ud2.height
+            if top2 <= bottom1 then
+                floorZ = math.max(floorZ, top2)
+            end
+            if bottom2 >= top1 then
+                ceilingZ = math.min(ceilingZ, bottom2)
+            end
+        end
+    end
+
+    ud1.floorZ = floorZ
+    ud1.ceilingZ = ceilingZ
+    return floorZ, ceilingZ
+end
+
+---@param body love.Body
+local function updateBodyZ(body, dt)
+    local ud = body:getUserData() ---@type BodyUserData
+    ud.velZ = ud.velZ + ud.gravity*dt
+    ud.z = ud.z + ud.velZ*dt
+
+    local floorZ, ceilingZ = ud.floorZ, ud.ceilingZ
+    if ud.z >= ceilingZ - ud.height then
+        ud.z = ceilingZ - ud.height
+        ud.velZ = 0
+    end
+    if ud.z <= floorZ then
+        ud.z = floorZ
+        ud.velZ = 0
+    end
+end
+
 function love.load()
     world = love.physics.newWorld(0, 0, false)
     world:setCallbacks(nil, nil, preSolve3D, nil)
@@ -100,17 +146,14 @@ function love.update(dt)
     iy = iy + (love.keyboard.isDown("s") and 1 or 0)
     player:setLinearVelocity(180*ix, 180*iy)
 
-    local floorZ = 0
+    for _, body in pairs(world:getBodies()) do
+        ---@cast body love.Body
+        updateBodyFloorAndCeiling(body)
+        updateBodyZ(body, dt)
+    end
 
-    local pud = player:getUserData()
-    if pud.z > floorZ then
-        pud.velZ = pud.velZ + pud.gravity*dt
-        pud.z = pud.z + pud.velZ*dt
-        if pud.z <= floorZ then
-            pud.velZ = 0
-            pud.z = floorZ
-        end
-    else
+    local pud = player:getUserData() ---@type BodyUserData
+    if pud.z == pud.floorZ and pud.z + pud.height < pud.ceilingZ then
         if love.keyboard.isDown("space") then
             pud.velZ = -pud.gravity
             pud.z = pud.z + pud.velZ*dt
