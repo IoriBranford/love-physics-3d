@@ -1,5 +1,24 @@
+---@class Body3DData
+---@field z number
+---@field height number
+---@field floorZ number
+---@field ceilingZ number
+---@field velZ number
+---@field restitutionZ number
+---@field gravity number
+
+---@class Color
+---@field red number
+---@field green number
+---@field blue number
+
+---@class BodyUserData:Body3DData,Color
+
 local world ---@type love.World
 local player ---@type love.Body
+
+local WorldBottom = 0
+local WorldTop = 0x10000000
 
 ---@param a love.Fixture
 ---@param b love.Fixture
@@ -27,13 +46,18 @@ function love.load()
 
     player = love.physics.newBody(world, 400, 300, "dynamic")
     love.physics.newFixture(player, love.physics.newCircleShape(16))
-    player:setUserData({
+    ---@type BodyUserData
+    local playerData = {
         z = 0,
         height = 64,
+        floorZ = WorldBottom,
+        ceilingZ = WorldTop,
         velZ = 0,
+        restitutionZ = 0,
         gravity = -180,
         red = 1, green = .5, blue = .5
-    })
+    }
+    player:setUserData(playerData)
 
     local playerX, playerY = player:getPosition()
     local triangles = love.math.triangulate(
@@ -45,16 +69,23 @@ function love.load()
         32 * math.cos(math.pi*5/3), 32 * math.sin(math.pi*5/3)
     )
     for i = 1, 6 do
-        local hexX, hexY = playerX + 100*math.cos(math.pi*i/3), playerY + 100*math.sin(math.pi*i/3)
-        local hex = love.physics.newBody(world, hexX, hexY, "static")
+        local platformX, platformY = playerX + 100*math.cos(math.pi*i/3), playerY + 100*math.sin(math.pi*i/3)
+        local platform = love.physics.newBody(world, platformX, platformY, "static")
         for _, triangle in ipairs(triangles) do
-            love.physics.newFixture(hex, love.physics.newPolygonShape(triangle))
+            love.physics.newFixture(platform, love.physics.newPolygonShape(triangle))
         end
-        hex:setUserData({
+        ---@type BodyUserData
+        local platformData = {
             z = 16*i,
             height = 32,
+            floorZ = WorldBottom,
+            ceilingZ = WorldTop,
+            velZ = 0,
+            restitutionZ = 0,
+            gravity = 0,
             red = .5, green = .5, blue = 1
-        })
+        }
+        platform:setUserData(platformData)
     end
     love.graphics.setBackgroundColor(0, .5, 0)
 end
@@ -106,12 +137,12 @@ function love.draw()
 
     for _, body in ipairs(bodies) do
         local fixtures = body:getFixtures() ---@type love.Fixture[]
-        local ud = body:getUserData()
+        local ud = body:getUserData() ---@type BodyUserData
         local x, y = body:getPosition()
         local z, height = ud.z, ud.height
         love.graphics.push()
         love.graphics.translate(x, y)
-        local floorZ = 0
+        local floorZ = ud.floorZ or WorldBottom
         for _, fixture in ipairs(fixtures) do
             local shape = fixture:getShape() ---@type love.Shape
             local shapeType = shape:getType()
