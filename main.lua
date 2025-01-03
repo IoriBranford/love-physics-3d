@@ -78,11 +78,11 @@ local function updateBodyZ(body, dt)
     local floorZ, ceilingZ = ud.floorZ, ud.ceilingZ
     if ud.z >= ceilingZ - ud.height then
         ud.z = ceilingZ - ud.height
-        ud.velZ = 0
+        ud.velZ = ud.restitutionZ * -ud.velZ
     end
     if ud.z <= floorZ then
         ud.z = floorZ
-        ud.velZ = 0
+        ud.velZ = ud.restitutionZ * -ud.velZ
     end
 end
 
@@ -127,8 +127,8 @@ function love.load()
             floorZ = WorldBottom,
             ceilingZ = WorldTop,
             velZ = 0,
-            restitutionZ = 0,
-            gravity = 0,
+            restitutionZ = 1,
+            gravity = -180,
             red = .5, green = .5, blue = 1
         }
         platform:setUserData(platformData)
