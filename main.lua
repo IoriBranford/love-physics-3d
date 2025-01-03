@@ -1,21 +1,30 @@
 local world ---@type love.World
 local player ---@type love.Body
 
+---@param a love.Fixture
+---@param b love.Fixture
+local function contactFilter3D(a, b)
+    local aud, bud = a:getBody():getUserData(), b:getBody():getUserData()
+    if not aud or not bud then return true end
+
+    local az, bz = aud.z, bud.z
+    local ah, bh = aud.height, bud.height
+    if not az or not bz or not ah or not bh then return true end
+
+    return az < bz + bh and bz < az + ah
+end
+
+---@param a love.Fixture
+---@param b love.Fixture
+---@param c love.Contact
+local function preSolve3D(a, b, c)
+    c:setEnabled(contactFilter3D(a, b))
+end
+
 function love.load()
     world = love.physics.newWorld(0, 0, false)
-    world:setContactFilter(
-    ---@param a love.Fixture
-    ---@param b love.Fixture
-    function(a, b)
-        local aud, bud = a:getBody():getUserData(), b:getBody():getUserData()
-        if not aud or not bud then return true end
-
-        local az, bz = aud.z, bud.z
-        local ah, bh = aud.height, bud.height
-        if not az or not bz or not ah or not bh then return true end
-
-        return az < bz + bh and bz < az + ah
-    end)
+    world:setContactFilter(contactFilter3D)
+    world:setCallbacks(nil, nil, preSolve3D, nil)
 
     player = love.physics.newBody(world, 400, 300, "dynamic")
     love.physics.newFixture(player, love.physics.newCircleShape(16))
@@ -121,8 +130,8 @@ function love.draw()
                 love.graphics.setColor(ud.red, ud.green, ud.blue)
                 love.graphics.circle("line", 0, -z, radius)
 
-                love.graphics.line(-radius, 0, -radius, -z-height)
-                love.graphics.line(radius, 0, radius, -z-height)
+                love.graphics.line(-radius, -z, -radius, -z-height)
+                love.graphics.line(radius, -z, radius, -z-height)
 
                 love.graphics.setColor(ud.red, ud.green, ud.blue, .5)
                 love.graphics.circle("fill", 0, -z-height, radius)
