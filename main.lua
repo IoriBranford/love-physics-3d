@@ -3,7 +3,7 @@ local player ---@type love.Body
 
 ---@param a love.Fixture
 ---@param b love.Fixture
-local function contactFilter3D(a, b)
+local function testCollisionZ(a, b)
     local aud, bud = a:getBody():getUserData(), b:getBody():getUserData()
     if not aud or not bud then return true end
 
@@ -18,12 +18,11 @@ end
 ---@param b love.Fixture
 ---@param c love.Contact
 local function preSolve3D(a, b, c)
-    c:setEnabled(contactFilter3D(a, b))
+    c:setEnabled(testCollisionZ(a, b))
 end
 
 function love.load()
     world = love.physics.newWorld(0, 0, false)
-    world:setContactFilter(contactFilter3D)
     world:setCallbacks(nil, nil, preSolve3D, nil)
 
     player = love.physics.newBody(world, 400, 300, "dynamic")
