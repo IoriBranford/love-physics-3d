@@ -4,7 +4,8 @@
         "love"
     ],
     "Lua.workspace.library": [
-        "${addons}/love2d/module/library"
+        "${addons}/love2d/module/library",
+        "${3rd}/love2d/library"
     ],
     "Lua.runtime.special": {
         "love.filesystem.load": "loadfile"
